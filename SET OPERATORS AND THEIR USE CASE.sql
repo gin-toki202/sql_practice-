@@ -147,7 +147,7 @@ FROM Sales.Customers
 --=================================================================================================================================================================================================
 
 /*
-INTERSCT :- RETURNS ONLY THE ROWS THAT ARE COMMON IN BOTH QUERIES .
+INTERSECT :- RETURNS ONLY THE ROWS THAT ARE COMMON IN BOTH QUERIES .
 
 */
 
