@@ -1,7 +1,7 @@
 -- JOINING MULTIPLE TABLES 
 
 /*
-MULTI TABLE JONI -> ADVANCED TABLE JOIN 
+MULTI TABLE JOIN -> ADVANCED TABLE JOIN 
 A good database has an entity relationship model ,that shows the relationship betweem tables 
 using primary ansd foreign key .
 

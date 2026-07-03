@@ -18,7 +18,7 @@ TYPES OF JOINS (COLUMN JOINING )
        [MASTER TABLE + REFERENCE TABLE] = [COMBINED TABLE RESULT]
 
        3. Checking for existence ( filtering )[INNER ,LEFT +WHERE, FULL+WHERE] :- using the look up table to filter the data from the main table .
-       EXAMPLE - Using attendance table to check the how many employee were present and put the names of the in the result (filtering) 
+       EXAMPLE - Using attendance table to check how many employee were present and put the names of the employee in the result (filtering) 
 */
 --===========================================================================================================================================================
 
@@ -45,7 +45,7 @@ SELECT * FROM orders
          * ORDER DOESN'T MATTER
 */
 
--- get all customers aling with their order , but only for customers who have placed an order 
+-- get all customers along with their order , but only for customers who have placed an order 
 SELECT 
 c.id,
 c.first_name,
