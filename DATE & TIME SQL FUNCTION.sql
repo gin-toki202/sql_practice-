@@ -183,3 +183,129 @@ WHERE MONTH(OrderDate) = 2
  | YEAR? --> YEAR()
  |
  |----------OTHER PARTS? --> DATEPART()
+ */
+ --==============================================================================================================================
+ /*
+ Datetime = 2025-08-20 18:55:45
+            year = yyyy
+            month = MM
+            day = dd
+            hour = HH
+            minutes = mm
+            seconds = ss
+
+WAYS OF PRESENTING DATES :- {sql server follows the international standard}
+                          1.  INTERNATIONAL STANDARD (ISO 8601) -> yyyy-MM-dd
+                          2.  USA STANDARD                      -> MM-dd-yyyy
+                          3.  EUROPEAN STANDARD                 -> dd-MM-yyyy
+
+ TYPE 1. [PART EXTRACTION] = FORMAT
+                             CAST
+                             CONVERT
+*/
+----------------------------------------------------------------------------------------------------------------------------------------------
+/*
+[FORMATTING] - CHANGING THE FORMAT OF A VALUE FROM ONE TO ANOTHER
+             - We are just changing the how the value looks like.
+
+FOR DATE :-
+  DATE -> FORMAT (dd-MM-yyyy) = resultant new format date 
+FOR NUMBER :- 
+     |--------------> (N) -> number seperated by comma eg- 1,234,567.89
+  NUMBER -> FORMAT -> (C) -> $ number
+     |--------------> (P) -> number % sign
+
+SYNTAX = FORMAT(vlaue,format,culture(optional)) {culture eg - ja -JP}
+by deafult it takes en-US culture .
+*/
+
+SELECT 
+CreationTime ,
+FORMAT(CreationTime,'dd') AS dd,
+FORMAT(CreationTime,'MM') AS MM,
+FORMAT(CreationTime,'yyyy') AS yyyy,
+FORMAT(CreationTime,'HH') AS HH,
+FORMAT(CreationTime,'mm') AS mm,
+FORMAT(CreationTime,'ss') AS ss,
+FORMAT(CreationTime,'dd-MM-yyyy') AS european_style,
+FORMAT(CreationTime,'MM-dd-yyyy') AS Usa_style,
+FORMAT(CreationTime,'yyyy-MM-dd') AS international_style
+FROM Sales.Orders
+
+-- getting  the abreviated day,month
+SELECT 
+CreationTime ,
+FORMAT(CreationTime,'ddd') AS ab_day,
+FORMAT(CreationTime,'dddd') AS full_day,
+FORMAT(CreationTime,'MMM') AS ab_month,
+FORMAT(CreationTime,'MMMM') AS full_month,
+FORMAT(CreationTime,'yyyy') AS yyyy,
+FORMAT(CreationTime,'dddd ')+ FORMAT(CreationTime,'MMMM ')+FORMAT(CreationTime,'yyyy') customized_date
+FROM Sales.Orders
+
+-- Show creationtime using the following format
+-- Day Wed Jan Q1 2025 12:34:56 PM
+SELECT 
+CreationTime,
+'DAY '+FORMAT(CreationTime,'ddd')+' '+FORMAT(CreationTime,'MMM ')+'Q'
++DATENAME(quarter,CreationTime)+' '+FORMAT(CreationTime,'yyyy ')+FORMAT(CreationTime,'HH:mm:ss')
++' '+FORMAT(CreationTime,'tt')  customized_date
+FROM Sales.Orders
+
+/*
+USE CASE OF FORMATING - 
+                     -> FORMATING THE DATE BEFORE DATA AGGREGATION
+                     -> DATA STANDARDIZATION = WHEN DATA IS COLLECTED FROM DIFFERENT SOURCE 
+                        DATES ARE NOT ALWAYS IN THE SAME STANDARD FORMAT SO YOU HAVE TO CLEAN IT MEANING BRING ALL THE 
+                        DATES TO ONE FORMAT 
+IT IS LIKE PART EXTRACTION BUT WE HAVE MORE CUSTOMIZATION OPTION ON HOW WE CHOOSE TO SHOW THE DATE 
+*/
+
+SELECT 
+FORMAT(OrderDate,'MMM yy') AS ORDER_DATE,
+COUNT(*)
+FROM Sales.Orders
+GROUP BY FORMAT(OrderDate,'MMM yy')
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+/*
+[CONVERT] - Converts a date or time value to a different data type & formats the value 
+
+SYNTAX :- CONVERT(data_type,value,style(optional))   by default the style is 0
+
+Example :- CONVERT (INT,'124') = CONVERT THE DATATYPE OF STRING '124' TO INTEGER 
+           CONVERT (VARCHAR,OrderDate,'34') = CONVERT THE DATATYPE OF ORDERDATE TO VARCHAR USING STYLE 34
+*/
+
+SELECT 
+CONVERT(INT,'123') AS [string to int],
+CONVERT (DATE,'2025-02-01') AS [string to date],
+CreationTime,
+CONVERT(DATE , CreationTime) AS [datetime to date],
+-- CHANGING IT INTO USA STYLE 
+CONVERT(VARCHAR , CreationTime,32) AS [USA STD STYLE STYLE : 32],
+CONVERT(VARCHAR, CreationTime,34) AS [EUROPEAN STD STYLE : 34]
+FROM Sales.Orders
+
+-----------------------------------------------------------------------------------------------------------------------------
+/*
+[CAST] - CONVERTS ONE DATATYPE TO ANOTHER 
+SYNTAX = CAST(VALUES AS DATA_TYPE)
+
+EXAMPLE - CAST('123' AS INT)
+*/
+SELECT 
+CAST('123' AS INT) AS INT_VALUE,
+CAST('2025-02-22' AS DATE) AS [string to date],
+CAST('2025-02-22' AS DATETIME) AS [string to datetime]
+,CreationTime,
+CAST(CreationTime AS DATE) AS [datetime to date]
+FROM Sales.Orders
+
+-------------------------------------------------------------------------------------------------------------------
+/*
+              [CASTING]           |      [FORMATING]
+----------------------------------------------------------------------|
+CAST    | ANY TYPE TO ANYTYPE     |   NO FORMATING                    |
+CONVERT | ANY TYPE TO ANYTYPE     |   FORMATES ONLY DATE AND TIME     |
+FORMAT  | ANY TYPE TO ONLY STRING |   FORMATES DATE&TIME AND NUMBERS  | 
