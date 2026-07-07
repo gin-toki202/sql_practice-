@@ -185,6 +185,7 @@ WHERE MONTH(OrderDate) = 2
  |----------OTHER PARTS? --> DATEPART()
  */
  --==============================================================================================================================
+ 
  /*
  Datetime = 2025-08-20 18:55:45
             year = yyyy
@@ -199,11 +200,13 @@ WAYS OF PRESENTING DATES :- {sql server follows the international standard}
                           2.  USA STANDARD                      -> MM-dd-yyyy
                           3.  EUROPEAN STANDARD                 -> dd-MM-yyyy
 
- TYPE 1. [PART EXTRACTION] = FORMAT
+ TYPE 2. [FORMATING & CASTING] = FORMAT
                              CAST
                              CONVERT
 */
+
 ----------------------------------------------------------------------------------------------------------------------------------------------
+
 /*
 [FORMATTING] - CHANGING THE FORMAT OF A VALUE FROM ONE TO ANOTHER
              - We are just changing the how the value looks like.
@@ -309,3 +312,163 @@ FROM Sales.Orders
 CAST    | ANY TYPE TO ANYTYPE     |   NO FORMATING                    |
 CONVERT | ANY TYPE TO ANYTYPE     |   FORMATES ONLY DATE AND TIME     |
 FORMAT  | ANY TYPE TO ONLY STRING |   FORMATES DATE&TIME AND NUMBERS  | 
+*/
+
+--=====================================================================================================================================================
+
+/*
+TYPE 3. [DATE CALCULATION] = DATEADD()
+                             DATEDIFF()
+*/
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+/*
+DATEADD() -> ADD OR SUBTRACT SPECIFIC TIME INTERVAL TO/FROM A DATE.
+
+SYNTAX :- DATEADD(PART,INTERVAL,DATE)
+
+FOR EXAMPLE :-
+
+DATE (2025-08-20) => +3 YEAR => 2028-08-20
+DATE (2025-08-20) => -3 YEAR => 2022-08-20
+DATE (2025-08-20) => +3 MONTH => 2025-11-20
+DATE (2025-08-20) => -3 MONTH => 2025-05-20
+DATE (2025-08-20) => +3 DAY => 2025-08-23
+DATE (2025-08-20) => -3 DAY => 2028-08-17
+*/
+SELECT 
+OrderID,
+OrderDate,
+DATEADD(YEAR , 3 , OrderDate) AS ThreeYearsLater,
+DATEADD(YEAR,-3,OrderDate) AS ThreeYearsBefore,
+DATEADD(MONTH , 3 , OrderDate) AS ThreeMonthLater,
+DATEADD(MONTH,-3,OrderDate) AS ThreeMonthBefore,
+DATEADD(DAY , 3 , OrderDate) AS ThreeDaysLater,
+DATEADD(DAY,-3,OrderDate) AS ThreeDaysBefore
+FROM Sales.Orders
+---------------------------------------------------------------------------------------------------------------------------------------
+/*
+DATEDIFF() -> FIND THE DIFFERENCE BETWEEN THE TWO DATES 
+
+SYNTAX:- DATEFIFF(PART,START_DATE,END_DATE)
+
+FOR EXAMPLE :
+START_DATE(2025-08-12) -- DIFF(YEAR) ----END_DATE(2026-08-12)  ===> 1 YEAR
+START_DATE(2025-08-12) -- DIFF(MONTH) ----END_DATE(2026-08-12)  ===> 12 MONTH
+START_DATE(2025-08-12) -- DIFF(DAYS) ----END_DATE(2025-08-20)  ===> 8 DAYS
+
+*/
+SELECT 
+'2025-08-12' AS START_DATE , 
+'2026-09-14' AS END_DATE,
+DATEDIFF(YEAR,'2025-08-12','2026-09-14') AS YEAR_DIFF,
+DATEDIFF(MONTH,'2025-08-12','2026-09-14') AS MONTH_DIFF,
+DATEDIFF(DAY,'2025-08-12','2026-09-14') AS DAY_DIFF
+UNION 
+SELECT 
+'2026-09-20',
+'2032-12-14' ,
+DATEDIFF(YEAR,'2026-09-20','2032-12-14') ,
+DATEDIFF(MONTH,'2026-09-20','2032-12-14') ,
+DATEDIFF(DAY,'2026-09-20','2032-12-14') 
+UNION
+SELECT 
+'2027-06-12' ,
+'2030-09-25',
+DATEDIFF(YEAR,'2027-06-12','2030-09-25') ,
+DATEDIFF(MONTH,'2027-06-12','2030-09-25') ,
+DATEDIFF(DAY,'2027-06-12','2030-09-25') 
+
+-- CALCULATE THE AGE OF THE EMPLOYEE 
+SELECT 
+EmployeeID,
+FirstName,
+DATEDIFF(YEAR,BirthDate,GETDATE()) AS AGE
+FROM Sales.Employees
+ 
+ -- FIND THE AVERAGE SHIPPING DURATION IN DAYS FOR EACH MONTH 
+
+ SELECT
+ MONTH(OrderDate) AS OrderDate,
+ AVG(DATEDIFF(DAY,OrderDate,ShipDate)) AS AVG_Order_Recieved_DURATION
+ FROM Sales.Orders
+ GROUP BY  MONTH(OrderDate)
+
+ -- TIME GAP ANALYSIS 
+ -- FIND THE NUMBER OF DAYS BETWEEN EACH ORDER AND THE PREVIOUS ORDER 
+ -- LAG() = IS A WINDOW FUNCTION ACCESS A VALUE FROM THE PREVIOUS ROW ,
+ -- SUPPOSE ROW 1(ORDER DATE) = 2025-01-01 BECOMES ROW 2(PREVIOUS DATE) = 2025-01-01
+
+ SELECT 
+ OrderID,
+ OrderDate AS Current_Orderdate,
+ LAG(OrderDate) OVER (ORDER BY OrderDate) AS PREVIOUS_DATE,
+ --ORDER BY OrderDate, SQL rows ko date ke sequence me arrange karega aur phir har row ke liye uske pehle wali date nikal dega.
+ DATEDIFF(DAY,LAG(OrderDate) OVER (ORDER BY OrderDate),OrderDate ) AS NumOfDays
+ FROM Sales.Orders
+
+--=====================================================================================================================================================
+
+/*
+TYPE 4. [VALIDATION] = ISDATE()
+
+*/
+-----------------------------------------------------------------------------------------------------------------------------------------------
+/*
+ISDATE() -> CHECK IF A VALUE IS A DATE 
+            RETURN 1 IF THE STRING IS A VALID DATE 
+
+SYNTAX:- ISDATE(VALUE)
+
+
+*/
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- checking the date validity 
+
+SELECT 
+'123' AS date,
+ISDATE('123')    AS date_check        -- ZERO BECAUSE IT IS NOT A DATE 
+UNION
+SELECT 
+'2025-12-02',
+ISDATE('2025-12-02')      -- ONE BECAUSE IT IS DATE 
+UNION
+SELECT 
+'12-02-2025',
+ISDATE('12-02-2025')
+UNION
+SELECT 
+'2025',
+ISDATE('2025')               -- it is a date to sql , considering how it could denote year then yes
+UNION
+SELECT 
+'08',
+ISDATE('08')                 -- doesn't recognise month as a date 
+
+/* WE ARE CONVERTING STRING TO DATE , BUT SOME DATE CAN'T BE CONVERTED BECAUSE THEY AREN'T ACTUALLY DATE ,SO WE USE 
+THE ISDATE() FUNCTION TO CHECK FOR THE VALID DATE AND USE THE CASE WHEN FUNCTION SO CASTING CAN ONLY BE DONE TO ONLY VALID DATES  */
+
+SELECT
+  -- CAST(OrderDate AS DATE) OrderDate
+  OrderDate,
+  ISDATE(OrderDate) AS DATE_CHECK,            -- WE GOT THAT 2025-08 IS NOT A VALID DATE 
+  CASE WHEN ISDATE(OrderDate) = 1 THEN CAST(OrderDate AS DATE)
+  END NEWOrderDate
+FROM
+(
+   SELECT '2025-08-20' AS OrderDate UNION
+   SELECT '2025-08-21' UNION
+   SELECT '2025-08-23' UNION
+   SELECT '2025-08' 
+)t
+-- use for data quality check 
+-- seeing the corrupted data 
+--WHERE ISDATE(OrderDate) = 0            UNCOMMENT IT TO USE 
+
+/*
+Yaha (SELECT ... UNION ...) ek derived table banata hai.
+Us derived table ka naam tumne t rakha hai.
+Matlab: t ek temporary table hai jisme tumhare UNION ke results store hote hain
+*/
+
