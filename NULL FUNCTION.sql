@@ -266,3 +266,138 @@ WHERE Score IS NULL
 SELECT *
 FROM Sales.Customers
 WHERE Score IS NOT NULL
+
+--==============================================================================================================================
+/*
+NULL VS BLANK SPACE VS EMPTY STRING 
+
+NULL :- MEANS NOTHING , UNKNOWN 
+EMPTY STRING ("") :-  STRING VALUE HAS ZERO CHARACTER 
+BLANK SPACE (" ") :- STRING VALUE HAS ONE OR MORE SPACE CHARACTERS 
+
+*/
+
+WITH Orders AS (
+SELECT 1 Id ,
+'A' Category 
+UNION
+SELECT 2,
+NULL
+UNION
+SELECT 3,
+''
+UNION
+SELECT 4,
+' ' 
+)
+SELECT *
+FROM Orders
+
+-- CALCULATING THE DATALENGTH OF CATEGORY COLUMN TO FIND OUT THE EXACT CUASE OF 3 AND 4 ROW 
+WITH Orders AS (
+SELECT 1 Id ,
+'A' Category 
+UNION
+SELECT 2,
+NULL
+UNION
+SELECT 3,
+''
+UNION
+SELECT 4,
+' ' 
+)
+SELECT 
+*,
+DATALENGTH(Category) AS CategoryLEN
+FROM Orders
+-- RESULT IS ROW 3 CATEGORY HAS 0 CHARACTER AND 4 CATEGORY HAS 1 CHARACTER 
+-- 3--> EMPTY STRING 
+-- 4--> BLANK SPACE
+-------------------------------------------------------------------------------------------------------------------------------------------
+/*
+                 |      NULL         |    EMPTY STRING       |      BLANK SPACE
+-----------------------------------------------------------------------------------------------
+                                     |                       |
+REPRESENTATION   |  NULL             |  ''                   |    ' '
+                 |                   |                       |
+MEANING          |  Unknown          |   known ,empty value  |    known ,space value                  
+                 |                   |                       |
+DATA TYPE        |  Special marker   |   string(0)           |    string(1 or more)
+                 |                   |                       |
+STORAGE          |  very minimal     |   occupies memory     |    occupies memeory (each space)
+                 |                   |                       |
+PERFORMANCE      |  best             |   fast                |    slow
+                 |                   |                       |
+COMPARISON       |  IS NULL          |    =''                |    =' '
+                 |                   |                       |
+*/
+-------------------------------------------------------------------------------------------------------------------------------------
+/*
+WHEN YOU ARE GIVEN A BIG DATA FOR A PROJECT AND YOU IMMEDIATELY START ANALYZING WITH 
+CLEANING OR HANDLING THE MISSING VALUE ,YOU WILL GET INACCURATE RESULT 
+SO BEFORE MOVING ON TO ANALYZING YOU NEED TO PREPARE YOUR DATA LIKE CLEANING ,HANDLING MISSING VALUES 
+SO IN ORDER TO DO THAT YOU NEED TO SET UP FIRM DATA POLICIES .
+
+DATA POLICY :- SET OF RULES THAT DEFINES HOW DATA SHOULD BE HANDLED
+*/
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+-- DATA POLICY NUMBER 1 = ONLY USE NULL AND EMPTY STRINGS BUT AVOID BLANK SPACES 
+-- TRIM FUNCTION IS USED TO REMOVING LEADING AND TRAILING SPACES FROM A STRING
+
+WITH Orders AS (
+SELECT 1 Id ,'A' Category UNION
+SELECT 2,NULL UNION
+SELECT 3, '' UNION
+SELECT 4, ' ' )
+SELECT 
+*,
+TRIM(Category) AS Policy_1,
+DATALENGTH(TRIM(Category)) AS CategoryLEN    
+FROM Orders
+
+-- DATE POLICY NUMBER 2 = ONLY USE NULLS AND AVOID USING EMPTY STRINGS AND BLANK SPACES 
+
+WITH Orders AS (
+SELECT 1 Id ,'A' Category UNION
+SELECT 2,NULL UNION
+SELECT 3, '' UNION
+SELECT 4, ' ' )
+SELECT 
+*,
+TRIM(Category) AS Policy_1,
+NULLIF(TRIM(Category),'') AS Policy_2
+FROM Orders
+
+-- DATA POLICY NUMBER 3 =  USE THE DEFAULT VALUE 'unknown' AND AVOID USING NULLS ,EMPTY STRINGS AND BLANK SPACES 
+
+
+WITH Orders AS (
+SELECT 1 Id ,'A' Category UNION
+SELECT 2,NULL UNION
+SELECT 3, '' UNION
+SELECT 4, ' ' )
+SELECT 
+*,
+TRIM(Category) AS Policy_1,
+NULLIF(TRIM(Category),'') AS Policy_2,
+COALESCE(NULLIF(TRIM(Category),''),'unknown') AS Policy_3
+FROM Orders
+----------------------------------------------------------------------------------------------------------------------------
+/*
+-- PROJECT BASED USE CASE 
+-- USE CASE OF DATA POLICY #2 = (DATA PREPARATION BEFORE INSERTING INTO A TABLE )
+                                REPLACING EMPTY STRINGS AND BLANK WITH NUL DURING
+                                DATA PREPARATION BEFORE INSERTING INTO A DATABASE 
+                                TO OPTIMIZE STORAGE AND PERFORMANCE 
+
+-- USE CASE OF DATA POLICY #3 = (WHEN YOU ARE ONE STEP BEFORE SHOWING IT TO THE CLIENT )
+                                REPLACING EMPTY STRINGS AND BLANK SPACES AND NULL WITH DAFULAT 
+                                VALUE DURING DATA PREPARATION BEFORE USING IT IN REPORTING 
+                                TO IMPROVE READIBILITY AND REDUCE CONFUSION 
+
+
+                   ---------------------------THE END---------------------------
+
