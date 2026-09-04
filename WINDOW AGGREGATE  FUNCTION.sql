@@ -276,6 +276,22 @@ FROM Sales.Orders
 GROUP BY SUM(Sales) OVER(
                 PARTITION BY OrderStatus) 
 */
+
+/*
+WHY THESE 2 WILL THROW AN ERROR ?
+--> this is the execution flow of sql query 
+1. FROM
+2. WHERE
+3. GROUP BY
+4. HAVING
+5. Window Functions
+6. SELECT
+7. ORDER BY
+
+We are using the "SUM(Sales) OVER(
+                PARTITION BY OrderStatus)"{window function} inside the WHERE clause , the sql will not filter the result because 
+                window function calculation haven't been performed yet. this is why it will give error .
+                */
 --------------------------------------------------------------------------------------------------------------------------------------------------
 /*
 RULE NO 2 :- NESTING WINDOW FUNCTION IS NOT ALLOWED 
