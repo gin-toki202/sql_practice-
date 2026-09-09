@@ -76,7 +76,7 @@ WHERE CheckPK > 1
 2. SUM () = Returns the sum values within a window  .
 */
 
--- Find the total slaes across all orders 
+-- Find the total sales across all orders 
 -- and the total sales for each product 
 -- additionally provide details such as order id and order date 
 
@@ -116,3 +116,141 @@ ROUND(CAST(Sales AS FLOAT) / SUM(Sales) OVER () * 100,2) PercentageTotal
 FROM Sales.Orders
 
 -- Order 8 is the highest contributer to the total
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+/*
+3. AVG () = Returns the AVERAGE of values within a window.
+
+   NOTE :- If the window has a null row during the average computation it will e ignored.
+           Each window will have a seperate average .
+
+*/
+-- USE CASE -> Group wise analysis 
+-- Find the average sales across all orders 
+-- And find the average sales for each product 
+-- Additionally provide details such orderID, order date 
+
+SELECT 
+ProductID,
+OrderID,
+OrderDate,
+AVG(Sales) OVER () AvgSales,
+AVG(Sales) OVER (PARTITION BY ProductID) AvgProductSales
+FROM Sales.Orders
+
+
+-- Hndling the NULL before and after average 
+-- Find the average score of customers.
+-- Additionally , provide details such as customer ID and Last Name
+
+SELECT 
+CustomerID,
+LastName,
+Score,
+COALESCE (Score,0) CustomerScore,
+AVG(Score) OVER() AvgScoreWithNULL,
+AVG(COALESCE(Score,0))OVER() AvgScore
+FROM Sales.Customers
+
+-- COMPARE TO AVERAGE :- Helps to eveluate whether a value is above or below average 
+-- Find all orders where sales are higher than the average sales across all orders 
+SELECT *
+FROM (
+SELECT
+ProductID,
+OrderID,
+OrderDate,
+Sales,
+AVG(Sales) OVER () AvgSales
+FROM Sales.Orders) t
+WHERE Sales > AvgSales
+
+---------------------------------------------------------------------------------------------------------------------
+/*
+MIN) and MAX :- find the highest and lowest sales for each product.
+
+   NOTE :- If the window has a null row during the average computation it will e ignored.
+           Each window will have a seperate average
+*/
+
+--Find the highest and lowest sales of all orders 
+-- find the highest and lowest sales of each product 
+-- additionaly provide details such as order id ,orderdate 
+
+SELECT 
+ProductID,
+OrderID,
+OrderDate,
+MAX(Sales) OVER() HighestSales,
+MIN(Sales) OVER() LowestSales,
+MAX(Sales) OVER(PARTITION BY ProductID) MaximumByProduct,
+MIN(Sales) OVER(PARTITION BY ProductID) MinimumByProduct
+FROM Sales.Orders
+
+
+-- Show the employee who have the highest salaries
+SELECT *
+FROM (
+SELECT 
+*,
+MAX(Salary) OVER() HighestSalary
+FROM Sales.Employees) t
+WHERE Salary = HighestSalary
+
+-- USE CASE :- Compare to extremes { Help to evaluate how well a value is performing relative to the extremes} 
+--Find the deviation of each sales from the minimum and maximum sales amount.
+SELECT 
+OrderID,
+OrderDate,
+ProductID,
+Sales,
+MAX(Sales) OVER() HighestSales,
+MIN(Sales) OVER() LowestSales,
+Sales - MIN(Sales) OVER() DeviationFromMin,   -- Lower the deviation , the closer the data point is to the extreme.
+MAX(Sales)  OVER()- sales DeviationFromMax    -- 
+FROM Sales.Orders
+
+------------------------------------------------------------------------------------------------------------------------------
+/*
+RUNNING TOTAL & ROLLING TOTAL :- window function concepts 
+
+A. RUNNING TOTAL :- when you define the frame ,keep adding values from the beginning to the current row 
+b. ROLLING TOTAL :- Similary with the frames , calculate the total using a fixed number of nearby rows that moves along with the current row {generally 2 PRECEDING AND CURRENT ROW } 
+
+Suppose you're analyzing monthly sales.
+
+Running total question:
+"How much total revenue have we generated so far this year?"
+Use a running total.
+Rolling total question:
+"What were the total sales during the last 3 months?"
+Use a rolling total.
+
+MAIN USE CASE IS :- 
+1. -> TRACKING :- Tracking current sales with target sales 
+2. -> Trend Analysis :- Providing insights into historical patterns 
+*/
+
+-- Calculate the moving average of sales for each product over time
+-- OVER TIME analysis means sorting dates in ascending order 
+SELECT 
+OrderID,
+ProductID,
+OrderDate,
+Sales,
+AVG(Sales) OVER(PARTITION BY ProductID) AvgByProduct,
+AVG(Sales) OVER(PARTITION BY ProductID ORDER BY OrderDate) MovingAvg
+FROM Sales.Orders
+
+-- Calculate the moving average of sales for each product over time,including only the next order 
+-- OVER TIME analysis means sorting dates in ascending order 
+SELECT 
+OrderID,
+ProductID,
+OrderDate,
+Sales,
+AVG(Sales) OVER(PARTITION BY ProductID) AvgByProduct,
+AVG(Sales) OVER(PARTITION BY ProductID ORDER BY OrderDate) MovingAvg,
+AVG(Sales) OVER(PARTITION BY ProductID ORDER BY OrderDate ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING) RollingAvg
+FROM Sales.Orders
